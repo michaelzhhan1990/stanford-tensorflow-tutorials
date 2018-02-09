@@ -22,13 +22,23 @@ sess = tf.InteractiveSession()
 x = tf.random_uniform([])  # Empty array as shape creates a scalar.
 y = tf.random_uniform([])
 out = tf.cond(tf.greater(x, y), lambda: x + y, lambda: x - y)
-print(sess.run(out))
+#print(sess.run(out))
 
 ###############################################################################
 # 1b: Create two 0-d tensors x and y randomly selected from the range [-1, 1).
 # Return x + y if x < y, x - y if x > y, 0 otherwise.
 # Hint: Look up tf.case().
 ###############################################################################
+x = tf.random_uniform([],-1,1)  # Empty array as shape creates a scalar.
+y = tf.random_uniform([],-1,1)
+def f1():return x+y
+def f2():return x-y
+def f3():return 0.0
+out = tf.case({tf.less(x, y):f1,tf.less(y,x):f2}, default=f3,exclusive=True)
+#print(sess.run(x))
+#print(sess.run(y))
+print(sess.run(out))
+
 
 # YOUR CODE
 
