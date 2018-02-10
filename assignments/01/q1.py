@@ -35,24 +35,26 @@ def f1():return x+y
 def f2():return x-y
 def f3():return 0.0
 out = tf.case({tf.less(x, y):f1,tf.less(y,x):f2}, default=f3,exclusive=True)
-#print(sess.run(x))
-#print(sess.run(y))
-print(sess.run(out))
-
-
+#print(x)
+#print(y)
+#print(sess.run(out))
 # YOUR CODE
 
 ###############################################################################
-# 1c: Create the tensor x of the value [[0, -2, -1], [0, 1, 2]] 
+# 1c: Create the tensor x of the value [[0, -2, -1], [0, 1, 2]]
 # and y as a tensor of zeros with the same shape as x.
 # Return a boolean tensor that yields Trues if x equals y element-wise.
 # Hint: Look up tf.equal().
 ###############################################################################
+x=tf.constant([[0,-2,-1],[0,1,2]])
+y=tf.zeros_like(x)
+out=tf.equal(x,y)
+#print(sess.run(out))
 
 # YOUR CODE
 
 ###############################################################################
-# 1d: Create the tensor x of value 
+# 1d: Create the tensor x of value
 # [29.05088806,  27.61298943,  31.19073486,  29.35532951,
 #  30.97266006,  26.67541885,  38.08450317,  20.74983215,
 #  34.94445419,  34.45999146,  29.06485367,  36.01657104,
@@ -63,6 +65,12 @@ print(sess.run(out))
 # Then extract elements whose values are greater than 30.
 # Hint: Use tf.gather().
 ###############################################################################
+x=tf.constant([29.05088806,  27.61298943,  31.19073486,  29.35532951,30.97266006,  26.67541885,  38.08450317,  20.74983215,34.94445419,  34.45999146,  29.06485367,  36.01657104,27.88236427,  20.56035233,  30.20379066,  29.51215172,33.71149445,  28.59134293,  36.05556488,  28.66994858])
+y=tf.constant([30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0])
+print(x)
+out=tf.where(tf.less(y,x),x)
+print(sess.run(out))
+
 
 # YOUR CODE
 
