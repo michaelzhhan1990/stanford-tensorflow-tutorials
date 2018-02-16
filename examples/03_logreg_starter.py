@@ -23,7 +23,7 @@ n_train = 60000
 n_test = 10000
 
 # Step 1: Read in data
-mnist_folder = 'data/mnist'
+mnist_folder = 'data\mnist'
 utils.download_mnist(mnist_folder)
 train, val, test = utils.read_mnist(mnist_folder, flatten=True)
 
@@ -34,26 +34,31 @@ train_data = train_data.shuffle(10000) # if you want to shuffle your data
 train_data = train_data.batch(batch_size)
 
 # create testing Dataset and batch it
-test_data = None
 #############################
 ########## TO DO ############
 #############################
+test_data  = tf.data.Dataset.from_tensor_slices(test)
+test_data = test_data.batch(batch_size)
 
 
 # create one iterator and initialize it with different datasets
-iterator = tf.data.Iterator.from_structure(train_data.output_types, 
+iterator = tf.data.Iterator.from_structure(train_data.output_types,
                                            train_data.output_shapes)
 img, label = iterator.get_next()
 
 train_init = iterator.make_initializer(train_data)	# initializer for train_data
-test_init = iterator.make_initializer(test_data)	# initializer for train_data
+test_init = iterator.make_initializer(test_data)	# initializer for test_data
+print(img.shape[1])
+print(label.shape[1])
 
 # Step 3: create weights and bias
 # w is initialized to random variables with mean of 0, stddev of 0.01
 # b is initialized to 0
 # shape of w depends on the dimension of X and Y so that Y = tf.matmul(X, w)
 # shape of b depends on Y
-w, b = None, None
+w = tf.get_variable(name='weights', shape=(img.shape[1],label.shape[1]), initializer=tf.random_normal_initializer(0, 0.01))
+b = tf.get_variable(name='bias', shape=(1, label.shape[1]), initializer=tf.zeros_initializer())
+
 #############################
 ########## TO DO ############
 #############################
@@ -62,7 +67,7 @@ w, b = None, None
 # Step 4: build model
 # the model that returns the logits.
 # this logits will be later passed through softmax layer
-logits = None
+logits = tf.matmul(img, w) + b
 #############################
 ########## TO DO ############
 #############################
@@ -70,7 +75,8 @@ logits = None
 
 # Step 5: define loss function
 # use cross entropy of softmax of logits as the loss function
-loss = None
+entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=label, name='entropy')
+loss = tf.reduce_mean(entropy, name='loss')
 #############################
 ########## TO DO ############
 #############################
@@ -78,7 +84,7 @@ loss = None
 
 # Step 6: define optimizer
 # using Adamn Optimizer with pre-defined learning rate to minimize loss
-optimizer = None
+optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 #############################
 ########## TO DO ############
 #############################
@@ -91,12 +97,12 @@ accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
 
 writer = tf.summary.FileWriter('./graphs/logreg', tf.get_default_graph())
 with tf.Session() as sess:
-   
+
     start_time = time.time()
     sess.run(tf.global_variables_initializer())
 
     # train the model n_epochs times
-    for i in range(n_epochs): 	
+    for i in range(n_epochs):
         sess.run(train_init)	# drawing samples from train_data
         total_loss = 0
         n_batches = 0

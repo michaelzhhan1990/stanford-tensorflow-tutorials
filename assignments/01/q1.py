@@ -124,5 +124,5 @@ print(sess.run(m))
 # - The sum of absolute value of all elements in the tensor (x - y) otherwise.
 # Hint: see the Huber loss function in the lecture slides 3.
 ###############################################################################
-
+x=tf.random_
 # YOUR CODE
