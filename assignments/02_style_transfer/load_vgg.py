@@ -11,6 +11,8 @@ For more details, please read the assignment handout:
 import numpy as np
 import scipy.io
 import tensorflow as tf
+import sys
+sys.path.insert(0,'/Users/hanz/Deep Learning/stanford-tensorflow-tutorials/examples')
 
 import utils
 
@@ -53,7 +55,13 @@ class VGG(object):
         """
         ###############################
         ## TO DO
-        out = None
+        W,b=self._weights(layer_idx,layer_name)
+
+        W=tf.convert_to_tensor(W)
+        b=tf.convert_to_tensor(b)
+
+        conv=tf.nn.conv2d(prev_layer,W)
+        out = tf.nn.relu(conv+b,name=layer_name)
         ###############################
         setattr(self, layer_name, out)
 
