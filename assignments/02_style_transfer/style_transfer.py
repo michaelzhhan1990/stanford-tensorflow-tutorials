@@ -94,7 +94,9 @@ class StyleTransfer(object):
         '''
         ###############################
         ## TO DO
-        self.content_loss = None
+
+        self.content_loss = 1/(P.shape[0]*P.shape[1]*P.shape[2])*tf.reduce_sum(tf.square(tf.subtract(P,F)))
+
         ###############################
         
     def _gram_matrix(self, F, N, M):

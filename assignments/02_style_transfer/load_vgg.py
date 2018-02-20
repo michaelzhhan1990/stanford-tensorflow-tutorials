@@ -12,7 +12,7 @@ import numpy as np
 import scipy.io
 import tensorflow as tf
 import sys
-sys.path.insert(0,'/Users/hanz/Deep Learning/stanford-tensorflow-tutorials/examples')
+#sys.path.insert(0,'/Users/hanz/Deep Learning/stanford-tensorflow-tutorials/examples')
 
 import utils
 
@@ -60,8 +60,9 @@ class VGG(object):
         W=tf.convert_to_tensor(W)
         b=tf.convert_to_tensor(b)
 
-        conv=tf.nn.conv2d(prev_layer,W)
+        conv=tf.nn.conv2d(prev_layer,W,strides=[1,1,1,1],padding='SAME')
         out = tf.nn.relu(conv+b,name=layer_name)
+        out.variable_scope=layer_name
         ###############################
         setattr(self, layer_name, out)
 
@@ -78,7 +79,8 @@ class VGG(object):
         """
         ###############################
         ## TO DO
-        out = None
+        out = tf.nn.avg_pool(prev_layer,ksize=[1,2,2,1],strides=[1,2,2,1],name=layer_name,padding='SAME')
+        out.variable_scope=layer_name
         ###############################
         setattr(self, layer_name, out)
 
