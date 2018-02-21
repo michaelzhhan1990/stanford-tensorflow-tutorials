@@ -94,9 +94,11 @@ class StyleTransfer(object):
             Use the coefficient defined in the assignment handout.
         '''
         ###############################
-        ## TO DO
+        ## TO DO  actually reshape or not it's the same
+        feature_P = tf.reshape(P, [P.shape[0], P.shape[1] * P.shape[2], P.shape[3]])
+        feature_F=tf.reshape(F,[F.shape[0],F.shape[1]*F.shape[2],F.shape[3]])
 
-        self.content_loss = 1/(P.shape[0]*P.shape[1]*P.shape[2])*tf.reduce_sum(tf.square(tf.subtract(P,F)))
+        self.content_loss = 1/(P.shape[1]*P.shape[2]*P.shape[3])*tf.reduce_sum(tf.square(tf.subtract(feature_P,feature_F)))
 
         ###############################
         
@@ -106,7 +108,9 @@ class StyleTransfer(object):
         """
         ###############################
         ## TO DO
-        return None
+        feature=tf.reshape(F,[F.shape[1]*F.shape[2],F.shape[3]])
+        #tf.scalar_mul(tf.constant([4 * N * N * M * M], dtype='float32')
+        return tf.matmul(feature,tf.transpose(feature))
         ###############################
 
     def _single_style_loss(self, a, g):
@@ -123,7 +127,9 @@ class StyleTransfer(object):
         """
         ###############################
         ## TO DO
-        return None
+        A=self._gram_matrix(a,a.shape[2],a.shape[0]*a.shape[1])
+        G=self._gram_matrix(g,g.shape[2],g.shape[0]*g.shape[1])
+        return tf.reduce_sum(tf.square(tf.subtract(G,A)))
         ###############################
 
     def _style_loss(self, A):
@@ -134,17 +140,17 @@ class StyleTransfer(object):
         ###############################
         ## TO DO
         self.style_loss = 0
-        weight=1
-        for style_layer in A:
-            self.style_loss+=weight*self._single_style_loss(style_layer[0],style_layer[1])
-            weight+=1
+        gen_img_styles=[getattr(self.vgg, layer) for layer in self.style_layers]
+        for index in range(0,len(A)):
+            self.style_loss+=self.style_layer_w[index]*self._single_style_loss(A[index],gen_img_styles[index])
         ###############################
 
     def losses(self):
         with tf.variable_scope('losses') as scope:
             with tf.Session() as sess:
                 # assign content image to the input variable
-                sess.run(self.input_img.assign(self.content_img)) 
+                sess.run(self.input_img.assign(self.content_img))
+                # gen_img_content is like a container, to get the specific layer and after running, you apply the img to the layer
                 gen_img_content = getattr(self.vgg, self.content_layer)
                 content_img_content = sess.run(gen_img_content)
             self._content_loss(content_img_content, gen_img_content)
@@ -157,13 +163,13 @@ class StyleTransfer(object):
             ##########################################
             ## TO DO: create total loss. 
             ## Hint: don't forget the weights for the content loss and style loss
-            self.total_loss = 1*self.content_loss+20*self.style_loss
+            self.total_loss = self.content_w*self.content_loss+self.style_w*self.style_loss
             ##########################################
 
     def optimize(self):
         ###############################
         ## TO DO: create optimizer
-        self.opt = tf.train.AdamOptimizer(self.lr).minimize(self.total_loss,
+        self.opt = tf.train.AdamOptimizer(self.lr).minimize(self.losses,
                                                             global_step=self.gstep)
         ###############################
 
