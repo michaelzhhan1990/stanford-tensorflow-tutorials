@@ -41,12 +41,13 @@ class StyleTransfer(object):
         self.content_layer = 'conv4_2'
         self.style_layers = ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']
         # content_w, style_w: corresponding weights for content loss and style loss
-        self.content_w = None
-        self.style_w = None
+        self.content_w = 1
+        self.style_w = 20
         # style_layer_w: weights for different style layers. deep layers have more weights
         self.style_layer_w = [0.5, 1.0, 1.5, 3.0, 4.0] 
-        self.gstep = None # global step
-        self.lr = None
+        self.gstep = tf.Variable(0, dtype=tf.int32,
+                                trainable=False, name='global_step')
+        self.lr = 0.001
         ###############################
 
     def create_input(self):
@@ -132,7 +133,11 @@ class StyleTransfer(object):
         """
         ###############################
         ## TO DO
-        self.style_loss = None
+        self.style_loss = 0
+        weight=1
+        for style_layer in A:
+            self.style_loss+=weight*self._single_style_loss(style_layer[0],style_layer[1])
+            weight+=1
         ###############################
 
     def losses(self):
@@ -152,13 +157,14 @@ class StyleTransfer(object):
             ##########################################
             ## TO DO: create total loss. 
             ## Hint: don't forget the weights for the content loss and style loss
-            self.total_loss = None
+            self.total_loss = 1*self.content_loss+20*self.style_loss
             ##########################################
 
     def optimize(self):
         ###############################
         ## TO DO: create optimizer
-        self.opt = None
+        self.opt = tf.train.AdamOptimizer(self.lr).minimize(self.total_loss,
+                                                            global_step=self.gstep)
         ###############################
 
     def create_summary(self):
@@ -185,7 +191,10 @@ class StyleTransfer(object):
             ## 1. initialize your variables
             ## 2. create writer to write your grapp
             ###############################
-            
+            utils.safe_mkdir('checkpoints')
+            utils.safe_mkdir('checkpoints/convnet_style_transfer')
+            writer = tf.summary.FileWriter('./graphs/style_transfer', tf.get_default_graph())
+            sess.run(tf.global_variables_initializer())
             sess.run(self.input_img.assign(self.initial_img))
 
             ###############################
@@ -193,9 +202,13 @@ class StyleTransfer(object):
             ## 1. create a saver object
             ## 2. check if a checkpoint exists, restore the variables
             ##############################
+            saver = tf.train.Saver()
+            ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/convnet_style_transfer/checkpoint'))
+            if ckpt and ckpt.model_checkpoint_path:
+                saver.restore(sess, ckpt.model_checkpoint_path)
 
             initial_step = self.gstep.eval()
-            
+
             start_time = time.time()
             for index in range(initial_step, n_iters):
                 if index >= 5 and index < 20:
