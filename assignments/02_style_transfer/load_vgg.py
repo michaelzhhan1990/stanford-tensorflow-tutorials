@@ -55,16 +55,16 @@ class VGG(object):
         """
         ###############################
         ## TO DO
-        W,b=self._weights(layer_idx,layer_name)
+        with tf.name_scope(layer_name) as scope:
+            W,b=self._weights(layer_idx,layer_name)
 
-        W=tf.convert_to_tensor(W)
-        b=tf.convert_to_tensor(b)
+            W=tf.convert_to_tensor(W)
+            b=tf.convert_to_tensor(b)
 
-        conv=tf.nn.conv2d(prev_layer,W,strides=[1,1,1,1],padding='SAME')
-        out = tf.nn.relu(conv+b,name=layer_name)
-        out.variable_scope=layer_name
-        ###############################
-        setattr(self, layer_name, out)
+            conv=tf.nn.conv2d(prev_layer,W,strides=[1,1,1,1],padding='SAME')
+            out = tf.nn.relu(conv+b,name=layer_name)
+            ###############################
+            setattr(self, layer_name, out)
 
     def avgpool(self, prev_layer, layer_name):
         """ Create the average pooling layer. The paper suggests that 
@@ -79,10 +79,10 @@ class VGG(object):
         """
         ###############################
         ## TO DO
-        out = tf.nn.avg_pool(prev_layer,ksize=[1,2,2,1],strides=[1,2,2,1],name=layer_name,padding='SAME')
-        out.variable_scope=layer_name
-        ###############################
-        setattr(self, layer_name, out)
+        with tf.name_scope(layer_name) as scope:
+            out = tf.nn.avg_pool(prev_layer,ksize=[1,2,2,1],strides=[1,2,2,1],name=layer_name,padding='SAME')
+            ###############################
+            setattr(self, layer_name, out)
 
     def load(self):
         self.conv2d_relu(self.input_img, 0, 'conv1_1')

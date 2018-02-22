@@ -47,7 +47,7 @@ class StyleTransfer(object):
         self.style_layer_w = [0.5, 1.0, 1.5, 3.0, 4.0] 
         self.gstep = tf.Variable(0, dtype=tf.int32,
                                 trainable=False, name='global_step')
-        self.lr = 0.001
+        self.lr = 1
         ###############################
 
     def create_input(self):
@@ -97,9 +97,7 @@ class StyleTransfer(object):
         ## TO DO  actually reshape or not it's the same
         feature_P = tf.reshape(P, [P.shape[0], P.shape[1] * P.shape[2], P.shape[3]])
         feature_F=tf.reshape(F,[F.shape[0],F.shape[1]*F.shape[2],F.shape[3]])
-
         self.content_loss = 1/(P.shape[1]*P.shape[2]*P.shape[3])*tf.reduce_sum(tf.square(tf.subtract(feature_P,feature_F)))
-
         ###############################
         
     def _gram_matrix(self, F, N, M):
@@ -155,6 +153,7 @@ class StyleTransfer(object):
                 content_img_content = sess.run(gen_img_content)
             self._content_loss(content_img_content, gen_img_content)
 
+
             with tf.Session() as sess:
                 sess.run(self.input_img.assign(self.style_img))
                 style_layers = sess.run([getattr(self.vgg, layer) for layer in self.style_layers])                              
@@ -163,13 +162,13 @@ class StyleTransfer(object):
             ##########################################
             ## TO DO: create total loss. 
             ## Hint: don't forget the weights for the content loss and style loss
-            self.total_loss = self.content_w*self.content_loss+self.style_w*self.style_loss
+            self.total_loss = self.content_w*self.content_loss +self.style_w*self.style_loss
             ##########################################
 
     def optimize(self):
         ###############################
         ## TO DO: create optimizer
-        self.opt = tf.train.AdamOptimizer(self.lr).minimize(self.losses,
+        self.opt = tf.train.AdamOptimizer(self.lr).minimize(self.total_loss,
                                                             global_step=self.gstep)
         ###############################
 
@@ -177,7 +176,14 @@ class StyleTransfer(object):
         ###############################
         ## TO DO: create summaries for all the losses
         ## Hint: don't forget to merge them
-        self.summary_op = None
+        with tf.name_scope('summaries'):
+            tf.summary.scalar('total_loss', self.total_loss)
+            tf.summary.histogram('histogram loss', self.total_loss)
+            tf.summary.scalar('content_loss', self.content_loss)
+            tf.summary.histogram('histogram content_loss', self.content_loss)
+            tf.summary.scalar('styles_loss', self.style_loss)
+            tf.summary.histogram('histogram styles_loss', self.style_loss)
+            self.summary_op = tf.summary.merge_all()
         ###############################
 
 
@@ -190,6 +196,10 @@ class StyleTransfer(object):
 
     def train(self, n_iters):
         skip_step = 1
+
+        utils.safe_mkdir('checkpoints')
+        utils.safe_mkdir('checkpoints/convnet_style_transfer')
+
         with tf.Session() as sess:
             
             ###############################
@@ -197,11 +207,9 @@ class StyleTransfer(object):
             ## 1. initialize your variables
             ## 2. create writer to write your grapp
             ###############################
-            utils.safe_mkdir('checkpoints')
-            utils.safe_mkdir('checkpoints/convnet_style_transfer')
-            writer = tf.summary.FileWriter('./graphs/style_transfer', tf.get_default_graph())
             sess.run(tf.global_variables_initializer())
             sess.run(self.input_img.assign(self.initial_img))
+            writer = tf.summary.FileWriter('./graphs/style_transfer_test', tf.get_default_graph())
 
             ###############################
             ## TO DO: 
@@ -221,12 +229,13 @@ class StyleTransfer(object):
                     skip_step = 10
                 elif index >= 20:
                     skip_step = 20
-                
-                sess.run(self.opt)
+                print('before running')
+                _,l,summaries,out_image = sess.run([self.opt,self.total_loss,self.summary_op,self.input_img])
+                print('after running')
                 if (index + 1) % skip_step == 0:
                     ###############################
                     ## TO DO: obtain generated image, loss, and summary
-                    gen_image, total_loss, summary = None, None, None
+                    gen_image, total_loss, summary = out_image,l,summaries
                     ###############################
                     
                     # add back the mean pixels we subtracted before
@@ -244,10 +253,11 @@ class StyleTransfer(object):
                         ###############################
                         ## TO DO: save the variables into a checkpoint
                         ###############################
+                        saver.save(sess, 'checkpoints/convnet_style_transfer/style-transfer-convnet')
                         pass
 
 if __name__ == '__main__':
     setup()
     machine = StyleTransfer('content/deadpool.jpg', 'styles/guernica.jpg', 333, 250)
     machine.build()
-    machine.train(300)
+    machine.train(30000)
