@@ -125,7 +125,8 @@ class StyleTransfer(object):
         """
         ###############################
         ## TO DO
-        A=self._gram_matrix(a,a.shape[2],a.shape[0]*a.shape[1])
+        a_tensor=tf.convert_to_tensor(a)
+        A=self._gram_matrix(a_tensor,a_tensor.shape[2],a_tensor.shape[0]*a_tensor.shape[1])
         G=self._gram_matrix(g,g.shape[2],g.shape[0]*g.shape[1])
         return tf.reduce_sum(tf.square(tf.subtract(G,A)))
         ###############################
