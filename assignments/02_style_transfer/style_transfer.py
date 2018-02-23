@@ -107,8 +107,7 @@ class StyleTransfer(object):
         ###############################
         ## TO DO
         feature=tf.reshape(F,[F.shape[1]*F.shape[2],F.shape[3]])
-        #tf.scalar_mul(tf.constant([4 * N * N * M * M], dtype='float32')
-        return tf.matmul(feature,tf.transpose(feature))
+        return tf.matmul(tf.transpose(feature),feature)
         ###############################
 
     def _single_style_loss(self, a, g):
@@ -128,7 +127,7 @@ class StyleTransfer(object):
         a_tensor=tf.convert_to_tensor(a)
         A=self._gram_matrix(a_tensor,a_tensor.shape[2],a_tensor.shape[0]*a_tensor.shape[1])
         G=self._gram_matrix(g,g.shape[2],g.shape[0]*g.shape[1])
-        return tf.reduce_sum(tf.square(tf.subtract(G,A)))
+        return tf.reduce_sum(tf.square(tf.subtract(G,A)))/(4*a.shape[2]*a.shape[2]*a.shape[1]*a.shape[1]*a.shape[3]*a.shape[3])
         ###############################
 
     def _style_loss(self, A):
