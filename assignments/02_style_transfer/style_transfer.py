@@ -47,7 +47,8 @@ class StyleTransfer(object):
         self.style_layer_w = [0.5, 1.0, 1.5, 3.0, 4.0] 
         self.gstep = tf.Variable(0, dtype=tf.int32,
                                 trainable=False, name='global_step')
-        self.lr = 1
+        starter_learning_rate=0.1
+        self.lr = tf.train.exponential_decay(starter_learning_rate,self.gstep,100000,0.96,staircase=True)
         ###############################
 
     def create_input(self):
@@ -229,9 +230,7 @@ class StyleTransfer(object):
                     skip_step = 10
                 elif index >= 20:
                     skip_step = 20
-                print('before running')
                 _,l,summaries,out_image = sess.run([self.opt,self.total_loss,self.summary_op,self.input_img])
-                print('after running')
                 if (index + 1) % skip_step == 0:
                     ###############################
                     ## TO DO: obtain generated image, loss, and summary
